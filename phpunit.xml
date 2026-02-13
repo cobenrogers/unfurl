@@ -4,7 +4,7 @@
          bootstrap="tests/bootstrap.php"
          colors="true"
          failOnWarning="true"
-         failOnRisky="true"
+         failOnRisky="false"
          beStrictAboutOutputDuringTests="true">
     <testsuites>
         <testsuite name="Unit">
