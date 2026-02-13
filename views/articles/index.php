@@ -229,9 +229,9 @@ $total_items = (int)($total_count ?? 0);
                             </div>
                         </th>
                         <th class="p-4 text-left font-semibold text-sm">Title</th>
-                        <th class="p-4 text-left font-semibold text-sm">Topic</th>
+                        <th class="p-4 text-left font-semibold text-sm" style="width: 120px;">Topic</th>
                         <th class="p-4 text-left font-semibold text-sm">Status</th>
-                        <th class="p-4 text-left font-semibold text-sm">Date</th>
+                        <th class="p-4 text-left font-semibold text-sm" style="width: 160px;">Date</th>
                         <th class="p-4 text-left font-semibold text-sm">Words</th>
                         <th class="p-4 text-center font-semibold text-sm">Actions</th>
                     </tr>
@@ -285,7 +285,7 @@ $total_items = (int)($total_count ?? 0);
                                 </span>
                             </td>
                             <td class="p-4 text-sm text-muted">
-                                <?= !empty($article['created_at']) ? $escaper->html($timezone->formatLocal($article['created_at'], 'M d, Y')) : '(empty)' ?>
+                                <?= !empty($article['created_at']) ? $escaper->html($timezone->formatLocal($article['created_at'], 'M d, Y g:i A')) : '(empty)' ?>
                             </td>
                             <td class="p-4 text-sm text-muted text-right">
                                 <?= $escaper->html($article['word_count'] ?? 0) ?>
