@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
+      - name: Create test .env file
+        run: cp .env.example .env
+
       - name: Run Unit Tests
         run: composer test:unit
 
