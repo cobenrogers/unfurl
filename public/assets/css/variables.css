@@ -1,0 +1,135 @@
+/* ============================================================================
+   UNFURL - Design System Variables
+   Defines design tokens for colors, typography, spacing, and effects
+   ========================================================================== */
+
+:root {
+  /* -----------------------------------------------------------------------
+     COLOR PALETTE
+     Teal/Amber theme reflecting "Unfolding Revelation" design concept
+     ----------------------------------------------------------------------- */
+
+  /* Primary Colors - Deep teal suggesting depth and revelation */
+  --color-primary: #0D7377;
+  --color-primary-light: #14FFEC;
+  --color-primary-dark: #053B3E;
+
+  /* Accent Colors - Warm amber for "aha!" moments */
+  --color-accent: #F4A261;
+  --color-accent-light: #F6BD8B;
+
+  /* Neutral Colors - Clean slate for content */
+  --color-bg: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-text: #1A1A1A;
+  --color-text-muted: #6B6B6B;
+  --color-border: #E5E5E5;
+  --color-border-light: #F0F0F0;
+
+  /* Status Colors */
+  --color-success: #2A9D8F;
+  --color-warning: #E9C46A;
+  --color-error: #E76F51;
+  --color-info: #4A90E2;
+
+  /* -----------------------------------------------------------------------
+     TYPOGRAPHY
+     Font families for different content types
+     ----------------------------------------------------------------------- */
+
+  /* Display font - Bold, geometric, modern */
+  --font-display: 'Space Grotesk', sans-serif;
+
+  /* Body font - Clean, readable, friendly */
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Monospace font - Technical data, URLs, code */
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* -----------------------------------------------------------------------
+     SPACING SYSTEM
+     Based on 4px increments for consistent, scalable spacing
+     ----------------------------------------------------------------------- */
+
+  --space-1: 0.25rem;   /* 4px  - Minimal gaps */
+  --space-2: 0.5rem;    /* 8px  - Tight spacing within components */
+  --space-3: 0.75rem;   /* 12px - Small padding */
+  --space-4: 1rem;      /* 16px - Standard padding */
+  --space-5: 1.5rem;    /* 24px - Standard gaps between sections */
+  --space-6: 2rem;      /* 32px - Large padding */
+  --space-8: 3rem;      /* 48px - Major section gaps */
+  --space-10: 4rem;     /* 64px - Page section spacing */
+
+  /* -----------------------------------------------------------------------
+     BORDER RADIUS
+     Elevation and hierarchy through subtle curves
+     ----------------------------------------------------------------------- */
+
+  --radius-sm: 4px;     /* Small elements, badges */
+  --radius-md: 8px;     /* Buttons, inputs, cards */
+  --radius-lg: 12px;    /* Modals, large cards */
+  --radius-full: 9999px; /* Pills, circular elements */
+
+  /* -----------------------------------------------------------------------
+     SHADOWS
+     Elevation system using primary color for tinted shadows
+     ----------------------------------------------------------------------- */
+
+  /* Shadow with teal tint - suggests depth and primary importance */
+  --shadow-sm: 0 1px 2px rgba(13, 115, 119, 0.05);
+  --shadow-md: 0 4px 6px rgba(13, 115, 119, 0.08),
+               0 1px 3px rgba(13, 115, 119, 0.04);
+  --shadow-lg: 0 10px 15px rgba(13, 115, 119, 0.1),
+               0 4px 6px rgba(13, 115, 119, 0.05);
+  --shadow-xl: 0 20px 25px rgba(13, 115, 119, 0.12),
+               0 8px 10px rgba(13, 115, 119, 0.06);
+
+  /* -----------------------------------------------------------------------
+     ANIMATION & MOTION
+     Timing functions and durations for consistent feel
+     ----------------------------------------------------------------------- */
+
+  /* Easing functions for different motion types */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);  /* Smooth, natural motion */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);       /* Fast start, slow end */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);        /* Slow start, fast end */
+
+  /* Animation durations */
+  --duration-micro: 150ms;  /* Quick feedback (hover, focus) */
+  --duration-short: 200ms;  /* Component transitions */
+  --duration-base: 300ms;   /* Standard transitions */
+  --duration-long: 400ms;   /* Page transitions */
+
+  /* -----------------------------------------------------------------------
+     Z-INDEX SCALE
+     Layering strategy for overlays, modals, and fixed elements
+     ----------------------------------------------------------------------- */
+
+  --z-base: 0;         /* Default stacking context */
+  --z-dropdown: 100;   /* Dropdowns, tooltips */
+  --z-sticky: 200;     /* Sticky headers, fixed nav */
+  --z-modal: 1000;     /* Modal backdrops */
+  --z-modal-content: 1001; /* Modal content */
+  --z-skip-link: 9999; /* Skip to main content link */
+
+  /* -----------------------------------------------------------------------
+     BREAKPOINTS
+     Responsive design breakpoints
+     ----------------------------------------------------------------------- */
+
+  --bp-mobile: 320px;   /* Smallest phones */
+  --bp-tablet: 768px;   /* Tablets and larger */
+  --bp-desktop: 1024px; /* Desktop and larger */
+  --bp-wide: 1440px;    /* Wide desktop */
+
+  /* -----------------------------------------------------------------------
+     TRANSITIONS
+     Default transition property values
+     ----------------------------------------------------------------------- */
+
+  --transition-default: all var(--duration-short) var(--ease-in-out);
+  --transition-color: color var(--duration-short) var(--ease-in-out);
+  --transition-background: background-color var(--duration-short) var(--ease-in-out);
+  --transition-transform: transform var(--duration-short) var(--ease-in-out);
+  --transition-shadow: box-shadow var(--duration-short) var(--ease-in-out);
+}

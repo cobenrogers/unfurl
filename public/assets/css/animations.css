@@ -1,0 +1,514 @@
+/* ============================================================================
+   UNFURL - Animation & Motion
+   Keyframe animations and transition utilities
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------
+   KEYFRAME ANIMATIONS
+   Core animations reflecting "Unfolding Revelation" theme
+   ----------------------------------------------------------------------- */
+
+/* UNFURL: Reveal animation for page load
+   Elements fade in and slide up from below */
+@keyframes unfurl {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply unfurl animation with staggered timing */
+.unfurl {
+  animation: unfurl 0.4s var(--ease-out) backwards;
+}
+
+/* Stagger children for cascading reveal effect */
+.unfurl:nth-child(1) { animation-delay: 0.05s; }
+.unfurl:nth-child(2) { animation-delay: 0.1s; }
+.unfurl:nth-child(3) { animation-delay: 0.15s; }
+.unfurl:nth-child(4) { animation-delay: 0.2s; }
+.unfurl:nth-child(5) { animation-delay: 0.25s; }
+.unfurl:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* FADE: Simple opacity transition */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in var(--duration-base) var(--ease-in-out);
+}
+
+/* SLIDE: Horizontal slide transitions */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left var(--duration-base) var(--ease-out);
+}
+
+.slide-in-right {
+  animation: slide-in-right var(--duration-base) var(--ease-out);
+}
+
+.slide-out-left {
+  animation: slide-out-left var(--duration-base) var(--ease-in);
+}
+
+.slide-out-right {
+  animation: slide-out-right var(--duration-base) var(--ease-in);
+}
+
+/* ZOOM: Scale transitions */
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.zoom-in {
+  animation: zoom-in var(--duration-base) var(--ease-out);
+}
+
+.zoom-out {
+  animation: zoom-out var(--duration-base) var(--ease-in);
+}
+
+/* SCALE BOUNCE: Playful emphasis animation */
+@keyframes scale-bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.scale-bounce {
+  animation: scale-bounce 0.6s var(--ease-in-out);
+}
+
+/* PULSE: Breathing effect for active/processing states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s var(--ease-in-out) infinite;
+}
+
+.pulse-fast {
+  animation: pulse 1s var(--ease-in-out) infinite;
+}
+
+/* SHIMMER: Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-border-light) 25%,
+    var(--color-border) 50%,
+    var(--color-border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* SPIN: Rotation animation for spinners/loaders */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+.spin-fast {
+  animation: spin 0.5s linear infinite;
+}
+
+/* BOUNCE: Vertical bounce effect */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* FLIP: 3D flip animation */
+@keyframes flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.flip {
+  animation: flip 0.6s var(--ease-in-out);
+  transform-style: preserve-3d;
+}
+
+/* JIGGLE: Subtle wiggle for attention */
+@keyframes jiggle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.jiggle {
+  animation: jiggle 0.5s var(--ease-in-out);
+}
+
+/* GLOW: Highlight effect */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(13, 115, 119, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(13, 115, 119, 0);
+  }
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* TYPING: Text cursor effect */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 49%, 100% {
+    border-right-color: transparent;
+  }
+  50%, 99% {
+    border-right-color: var(--color-text);
+  }
+}
+
+.text-typing {
+  animation: typing 3.5s steps(40, end), blink 0.75s step-end infinite;
+  overflow: hidden;
+  border-right: 3px solid var(--color-text);
+  white-space: nowrap;
+}
+
+/* -----------------------------------------------------------------------
+   TRANSITION UTILITY CLASSES
+   Apply standardized transitions
+   ----------------------------------------------------------------------- */
+
+/* Default transition */
+.transition {
+  transition: var(--transition-default);
+}
+
+/* Specific property transitions */
+.transition-colors {
+  transition: var(--transition-color), background-color var(--duration-short) var(--ease-in-out);
+}
+
+.transition-background {
+  transition: var(--transition-background);
+}
+
+.transition-transform {
+  transition: var(--transition-transform);
+}
+
+.transition-shadow {
+  transition: var(--transition-shadow);
+}
+
+.transition-opacity {
+  transition: opacity var(--duration-short) var(--ease-in-out);
+}
+
+.transition-all {
+  transition: all var(--duration-short) var(--ease-in-out);
+}
+
+/* Duration utilities */
+.duration-150 { transition-duration: 150ms; }
+.duration-200 { transition-duration: 200ms; }
+.duration-300 { transition-duration: 300ms; }
+.duration-500 { transition-duration: 500ms; }
+
+/* Easing utilities */
+.ease-linear { transition-timing-function: linear; }
+.ease-in { transition-timing-function: var(--ease-in); }
+.ease-out { transition-timing-function: var(--ease-out); }
+.ease-in-out { transition-timing-function: var(--ease-in-out); }
+
+/* -----------------------------------------------------------------------
+   HOVER & INTERACTIVE EFFECTS
+   ----------------------------------------------------------------------- */
+
+/* Lift effect on hover */
+.hover-lift {
+  transition: transform var(--duration-short) var(--ease-out), box-shadow var(--duration-short) var(--ease-out);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Grow effect on hover */
+.hover-grow {
+  transition: transform var(--duration-short) var(--ease-out);
+}
+
+.hover-grow:hover {
+  transform: scale(1.05);
+}
+
+/* Brighten effect on hover */
+.hover-brighten {
+  transition: filter var(--duration-short) var(--ease-out);
+}
+
+.hover-brighten:hover {
+  filter: brightness(1.1);
+}
+
+/* Darken effect on hover */
+.hover-darken {
+  transition: filter var(--duration-short) var(--ease-out);
+}
+
+.hover-darken:hover {
+  filter: brightness(0.9);
+}
+
+/* Rotate effect on hover */
+.hover-rotate {
+  transition: transform var(--duration-short) var(--ease-out);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg);
+}
+
+/* Underline animation on hover */
+.hover-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+  transition: width var(--duration-short) var(--ease-out);
+}
+
+.hover-underline:hover::after {
+  width: 100%;
+}
+
+/* -----------------------------------------------------------------------
+   ANIMATION UTILITIES
+   Control animation behavior
+   ----------------------------------------------------------------------- */
+
+.animate-none {
+  animation: none;
+}
+
+.animate-pause {
+  animation-play-state: paused;
+}
+
+.animate-running {
+  animation-play-state: running;
+}
+
+/* -----------------------------------------------------------------------
+   ACCESSIBILITY
+   Respect prefers-reduced-motion
+   ----------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -----------------------------------------------------------------------
+   DARK MODE ANIMATIONS (Future)
+   Placeholder for dark mode animation adjustments
+   ----------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode animation colors */
+}
+
+/* -----------------------------------------------------------------------
+   SCROLL ANIMATIONS
+   Elements animate on scroll (requires JavaScript)
+   ----------------------------------------------------------------------- */
+
+.scroll-fade-in {
+  opacity: 0;
+  animation: fade-in var(--duration-base) var(--ease-in-out) forwards;
+}
+
+.scroll-unfurl {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: unfurl 0.4s var(--ease-out) forwards;
+}
+
+.scroll-slide-in {
+  opacity: 0;
+  animation: slide-in-left var(--duration-base) var(--ease-out) forwards;
+}
+
+/* -----------------------------------------------------------------------
+   PAGE TRANSITION ANIMATIONS
+   For page load and navigation
+   ----------------------------------------------------------------------- */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.page-enter {
+  animation: page-enter var(--duration-long) var(--ease-in-out);
+}
+
+.page-exit {
+  animation: page-exit var(--duration-long) var(--ease-in-out);
+}

@@ -1,0 +1,34 @@
+{
+  "name": "unfurl",
+  "version": "0.1.0",
+  "description": "A tool for processing Google News RSS feeds using browser automation to extract actual article URLs and metadata",
+  "main": "unfurl.js",
+  "scripts": {
+    "start": "node unfurl.js",
+    "demo": "node unfurl.js --limit=5",
+    "headless": "node unfurl.js --headless",
+    "install-browsers": "playwright install chromium"
+  },
+  "keywords": [
+    "google-news",
+    "rss",
+    "feed-processor",
+    "url-decoder",
+    "browser-automation",
+    "playwright",
+    "news-aggregator",
+    "metadata-extractor"
+  ],
+  "author": "BennernetLLC",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.48.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cobenrogers/unfurl"
+  }
+}

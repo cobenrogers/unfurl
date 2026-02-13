@@ -1,0 +1,22 @@
+{
+  "name": "unfurl",
+  "version": "1.0.0",
+  "description": "Google News URL Decoder & RSS Feed Generator",
+  "private": true,
+  "scripts": {
+    "unfurl": "node scripts/unfurl-service.js",
+    "install-playwright": "npx playwright install chromium",
+    "test:e2e": "npx playwright test",
+    "test:e2e:settings": "npx playwright test specs/settings.spec.ts",
+    "test:e2e:report": "npx playwright show-report"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

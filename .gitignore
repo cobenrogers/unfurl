@@ -1,0 +1,49 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Configuration backups (may contain secrets)
+config.php.bak
+*.env.backup
+
+# Vendor
+vendor/
+
+# Sensitive data
+storage/temp/*
+!storage/temp/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Logs (may contain sensitive info)
+*.log
+
+# Database dumps
+*.sql
+*.sql.gz
+!sql/schema.sql
+!sql/migrations/*.sql
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+.phpunit.result.cache
+coverage/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Node (if using for build tools)
+node_modules/
+npm-debug.log*

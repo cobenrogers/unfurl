@@ -1,0 +1,588 @@
+/* ============================================================================
+   UNFURL - Component Styles
+   Reusable component styles: buttons, inputs, badges, cards
+   ========================================================================== */
+
+/* -----------------------------------------------------------------------
+   BUTTONS
+   ----------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  transition: var(--transition-default);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Button - Main call-to-action */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  color: white;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Secondary Button - Alternative action */
+.btn-secondary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-secondary:active:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.btn-secondary:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Danger Button - Destructive action */
+.btn-danger {
+  background-color: var(--color-error);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #D94530;
+  color: white;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger:focus-visible {
+  outline: 3px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+/* Success Button */
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #1F7B6F;
+  color: white;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Ghost Button - Minimal style */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--color-border-light);
+}
+
+/* Small Button */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+
+/* Large Button */
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  min-height: 52px;
+}
+
+/* Full Width Button */
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+/* Button with icon - flexbox for alignment */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.btn-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* -----------------------------------------------------------------------
+   FORM INPUTS & FIELDS
+   ----------------------------------------------------------------------- */
+
+.input-field {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 44px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  transition: var(--transition-default);
+}
+
+.input-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.1);
+}
+
+.input-field:disabled {
+  background-color: var(--color-border-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Error state */
+.input-field.error {
+  border-color: var(--color-error);
+}
+
+.input-field.error:focus {
+  box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.1);
+}
+
+/* Success state */
+.input-field.success {
+  border-color: var(--color-success);
+}
+
+.input-field.success:focus {
+  box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.1);
+}
+
+/* Textarea */
+textarea.input-field {
+  min-height: 120px;
+  padding: var(--space-3);
+  resize: vertical;
+}
+
+/* Select */
+select.input-field {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%230D7377' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+}
+
+/* Input Groups */
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface);
+  transition: var(--transition-default);
+}
+
+.input-group:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(13, 115, 119, 0.1);
+}
+
+.input-group-addon {
+  padding: 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  background-color: var(--color-border-light);
+  border-right: 1px solid var(--color-border);
+}
+
+.input-group .input-field {
+  flex: 1;
+  border: none;
+  padding: 0.875rem;
+  min-height: 44px;
+}
+
+/* -----------------------------------------------------------------------
+   LABELS & FORM STRUCTURE
+   ----------------------------------------------------------------------- */
+
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.label-required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
+.help-text {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.error-message {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--color-error);
+}
+
+.success-message {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+  color: var(--color-success);
+}
+
+/* -----------------------------------------------------------------------
+   CHECKBOXES & RADIO BUTTONS
+   Custom styled form controls
+   ----------------------------------------------------------------------- */
+
+.checkbox,
+.radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox input,
+.radio input {
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.checkbox input[type="checkbox"],
+.radio input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  margin: 0;
+  /* Restore native appearance (reset.css removes it) */
+  -webkit-appearance: auto;
+  appearance: auto;
+}
+
+.checkbox input[type="checkbox"] {
+  border-radius: var(--radius-sm);
+}
+
+.checkbox input[type="radio"] {
+  border-radius: 50%;
+}
+
+/* -----------------------------------------------------------------------
+   BADGES & STATUS INDICATORS
+   ----------------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Success Badge */
+.badge.success {
+  background-color: #D4F4DD;
+  color: #1A6B3D;
+}
+
+/* Warning Badge */
+.badge.warning {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+/* Error Badge */
+.badge.error {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+/* Info Badge */
+.badge.info {
+  background-color: #E0F2FE;
+  color: #0C4A6E;
+}
+
+/* Neutral Badge */
+.badge.neutral {
+  background-color: var(--color-border-light);
+  color: var(--color-text);
+}
+
+/* Badge with dot indicator */
+.badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.badge.no-dot::before {
+  display: none;
+}
+
+/* Pill Badge (larger) */
+.badge-lg {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+/* -----------------------------------------------------------------------
+   CARDS
+   ----------------------------------------------------------------------- */
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition-shadow);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-border-light);
+}
+
+.card-body {
+  padding: var(--space-4);
+}
+
+.card-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-border-light);
+}
+
+/* -----------------------------------------------------------------------
+   ALERTS
+   ----------------------------------------------------------------------- */
+
+.alert {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  border-left: 4px solid;
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.alert-success {
+  background-color: #D4F4DD;
+  border-color: var(--color-success);
+  color: #1A6B3D;
+}
+
+.alert-warning {
+  background-color: #FEF3C7;
+  border-color: var(--color-warning);
+  color: #92400E;
+}
+
+.alert-error {
+  background-color: #FEE2E2;
+  border-color: var(--color-error);
+  color: #991B1B;
+}
+
+.alert-info {
+  background-color: #E0F2FE;
+  border-color: var(--color-info);
+  color: #0C4A6E;
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.alert-message {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* -----------------------------------------------------------------------
+   LOADING STATES & SPINNERS
+   ----------------------------------------------------------------------- */
+
+.spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+.spinner-lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+/* -----------------------------------------------------------------------
+   ACCESSIBILITY
+   ----------------------------------------------------------------------- */
+
+/* Focus visible styles */
+.btn:focus-visible,
+.input-field:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link (keyboard-only navigation) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--space-4);
+  background-color: var(--color-primary);
+  color: white;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  z-index: var(--z-skip-link);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.skip-link:focus-visible {
+  top: var(--space-4);
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
