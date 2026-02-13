@@ -47,3 +47,6 @@ test-results/
 # Node (if using for build tools)
 node_modules/
 npm-debug.log*
+
+# FTP Deploy
+.ftp-deploy-sync-state.json

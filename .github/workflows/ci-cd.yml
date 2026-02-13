@@ -83,33 +83,30 @@ jobs:
       - name: Install dependencies (production)
         run: composer install --prefer-dist --no-progress --no-suggest --no-dev --optimize-autoloader
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
+      - name: Deploy to Production via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy to cPanel via rsync
-        run: |
-          rsync -avz --exclude='.git' \
-            --exclude='.env' \
-            --exclude='tests' \
-            --exclude='playwright-report' \
-            --exclude='test-results' \
-            --exclude='node_modules' \
-            --exclude='storage/temp/*' \
-            --exclude='storage/logs/*' \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
-
-      - name: Set permissions
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.DEPLOY_PATH }} && \
-            chmod -R 755 storage && \
-            chmod -R 644 storage/temp/.gitkeep storage/logs/.gitkeep"
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/playwright-report/**
+            **/test-results/**
+            **/.env
+            **/.env.*
+            **/storage/temp/**
+            **/storage/logs/**
+            **/phpunit.xml
+            **/playwright.config.ts
+            **/package.json
+            **/package-lock.json
+            **/.DS_Store
+            **/screenshots/**
 
       - name: Health Check
         run: |

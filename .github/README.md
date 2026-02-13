@@ -5,40 +5,43 @@
 Configure these secrets in your repository settings:
 `Settings` → `Secrets and variables` → `Actions` → `New repository secret`
 
-### Deployment Secrets
+### Deployment Secrets (FTP)
 
 | Secret Name | Description | Example |
 |-------------|-------------|---------|
-| `SSH_PRIVATE_KEY` | Private SSH key for cPanel access | Contents of your private key file |
-| `SSH_HOST` | cPanel server hostname | `yoursite.com` |
-| `SSH_USER` | cPanel username for SSH | `cpanel_username` |
-| `DEPLOY_PATH` | Path to unfurl installation | `/home/user/public_html/unfurl` |
-| `APP_URL` | Base URL of your application | `https://yoursite.com/unfurl` |
+| `FTP_SERVER` | FTP server hostname | `ftp.mir.diw.mybluehost.me` |
+| `FTP_USERNAME` | FTP username | `deploy@unfurl.bennernet.com` |
+| `FTP_PASSWORD` | FTP password | `your-secure-password` |
+| `FTP_SERVER_DIR` | Deployment directory path | `/` (usually root for subdomain FTP accounts) |
+| `APP_URL` | Base URL of your application | `https://unfurl.bennernet.com` |
 
-### Setting Up SSH Key
+### Setting Up FTP Deployment
 
-1. **Generate SSH key** (if you don't have one):
-   ```bash
-   ssh-keygen -t ed25519 -C "github-actions-unfurl"
-   ```
-
-2. **Add public key to cPanel**:
+1. **Create FTP Account in cPanel**:
    - Log into cPanel
-   - Go to Security → SSH Access → Manage SSH Keys
-   - Import or paste your public key
-   - Authorize the key
+   - Go to Files → FTP Accounts
+   - Create new FTP account:
+     - Username: `deploy@unfurl.bennernet.com`
+     - Password: Generate strong password
+     - Directory: Set to your unfurl installation directory
+     - Quota: Unlimited or sufficient for your needs
 
-3. **Add private key to GitHub**:
-   - Copy entire private key (including BEGIN/END lines)
-   - Go to repository Settings → Secrets → New repository secret
-   - Name: `SSH_PRIVATE_KEY`
-   - Value: Paste private key
-   - Save
-
-4. **Test SSH connection**:
+2. **Test FTP Connection**:
    ```bash
-   ssh -i path/to/private_key cpanel_user@yoursite.com
+   # Using curl
+   curl -v ftp://your-ftp-server/ --user "username:password"
+
+   # Or use an FTP client like FileZilla
    ```
+
+3. **Add Secrets to GitHub**:
+   - Go to: https://github.com/cobenrogers/unfurl/settings/secrets/actions
+   - Click "New repository secret" for each:
+     - `FTP_SERVER`: Your FTP hostname
+     - `FTP_USERNAME`: Your FTP username
+     - `FTP_PASSWORD`: Your FTP password
+     - `FTP_SERVER_DIR`: Usually `/` for subdomain FTP accounts
+     - `APP_URL`: Your application's public URL
 
 ## Workflow Overview
 
@@ -63,9 +66,9 @@ Configure these secrets in your repository settings:
 
 2. **Deploy** (runs only on main branch push, after tests pass)
    - Installs production dependencies
-   - Sets up SSH connection
-   - Deploys via rsync
-   - Sets file permissions
+   - Connects via FTP
+   - Deploys files (excludes tests, node_modules, .env, etc.)
+   - Incremental deployment (only changed files)
    - Runs health check
    - Notifies success/failure
 
@@ -97,10 +100,12 @@ Add these to your README:
 - Review test output in Actions tab
 
 ### Deployment failing?
-- Verify SSH key is correct and authorized
-- Check cPanel SSH access is enabled
-- Verify DEPLOY_PATH exists and is writable
+- Verify FTP credentials are correct
+- Test FTP connection manually with `curl` or FTP client
+- Check FTP_SERVER_DIR path is correct (usually `/` for subdomain accounts)
+- Verify FTP account has write permissions
 - Check health.php endpoint is accessible
+- Review GitHub Actions logs for detailed error messages
 
 ### Health check failing?
 - Verify APP_URL is correct
