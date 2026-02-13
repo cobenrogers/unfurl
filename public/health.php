@@ -8,6 +8,9 @@
 
 header('Content-Type: application/json');
 
+// Load Composer autoloader
+require_once __DIR__ . '/../vendor/autoload.php';
+
 // Load configuration
 require_once __DIR__ . '/../config.php';
 
