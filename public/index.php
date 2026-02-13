@@ -885,7 +885,7 @@ $router->get('/api/feed', function () use ($apiKeyRepo, $articleRepo, $escaper, 
 });
 
 // Production Sync Import API (receive articles from local)
-$router->post('/api/sync/import', function () use ($apiKeyRepo, $articleRepo, $feedRepo, $logger) {
+$router->post('/api/sync/import', function () use ($db, $apiKeyRepo, $articleRepo, $feedRepo, $logger) {
     header('Content-Type: application/json');
 
     try {
@@ -964,7 +964,7 @@ $router->post('/api/sync/import', function () use ($apiKeyRepo, $articleRepo, $f
                     processed_at = VALUES(processed_at),
                     updated_at = CURRENT_TIMESTAMP";
 
-                $stmt = $articleRepo->db->prepare($sql);
+                $stmt = $db->getConnection()->prepare($sql);
                 $stmt->execute([
                     $article['feed_id'],
                     $article['topic'],
