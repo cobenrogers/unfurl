@@ -1,0 +1,130 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, pdo, pdo_mysql, curl, xml, json
+          coverage: xdebug
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run Unit Tests
+        run: composer test:unit
+
+      - name: Run Integration Tests
+        run: composer test:integration
+
+      - name: Run Security Tests
+        run: vendor/bin/phpunit --testsuite Security --colors=always
+
+      - name: Run Performance Tests
+        run: composer test:performance
+
+      - name: Generate Coverage Report (PHP 8.2 only)
+        if: matrix.php-version == '8.2'
+        run: composer test:coverage
+
+      - name: Upload Coverage to Codecov (PHP 8.2 only)
+        if: matrix.php-version == '8.2'
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage.xml
+          flags: unittests
+          name: codecov-unfurl
+
+  deploy:
+    name: Deploy to Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Install dependencies (production)
+        run: composer install --prefer-dist --no-progress --no-suggest --no-dev --optimize-autoloader
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to cPanel via rsync
+        run: |
+          rsync -avz --exclude='.git' \
+            --exclude='.env' \
+            --exclude='tests' \
+            --exclude='playwright-report' \
+            --exclude='test-results' \
+            --exclude='node_modules' \
+            --exclude='storage/temp/*' \
+            --exclude='storage/logs/*' \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
+
+      - name: Set permissions
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.DEPLOY_PATH }} && \
+            chmod -R 755 storage && \
+            chmod -R 644 storage/temp/.gitkeep storage/logs/.gitkeep"
+
+      - name: Health Check
+        run: |
+          sleep 5
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}/health.php)
+          if [ $HTTP_CODE -ne 200 ]; then
+            echo "Health check failed with status code: $HTTP_CODE"
+            exit 1
+          fi
+          echo "Health check passed!"
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "✅ Deployment successful!"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check logs for details."
