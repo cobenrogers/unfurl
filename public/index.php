@@ -56,7 +56,7 @@ $apiKeyRepo = new ApiKeyRepository($db, $timezone);
 $logRepo = new LogRepository($db, $timezone);
 
 // Initialize services
-$isProduction = ($config['app']['environment'] ?? 'development') === 'production';
+$isProduction = ($config['app']['env'] ?? 'development') === 'production';
 $auth = new Auth($db->getConnection(), $isProduction);
 $queue = new ProcessingQueue($articleRepo, $logger, $timezone);
 $csrf = new CsrfToken();
