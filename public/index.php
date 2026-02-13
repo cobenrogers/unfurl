@@ -76,10 +76,11 @@ $router = new Router();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $publicPaths = ['/login', '/pending-approval', '/health', '/api/health'];
 
-// Allow unauthenticated access to RSS feeds and API endpoints (they use API keys)
+// Allow unauthenticated access to RSS feeds, API endpoints, and static assets
 $isPublicEndpoint = in_array($currentPath, $publicPaths)
     || str_starts_with($currentPath, '/feed')
-    || str_starts_with($currentPath, '/api/');
+    || str_starts_with($currentPath, '/api/')
+    || str_starts_with($currentPath, '/assets/');
 
 if (!$isPublicEndpoint) {
     $auth->requireApproval();
@@ -100,7 +101,22 @@ $router->get('/pending-approval', function () use ($auth) {
 });
 
 $router->get('/logout', function () use ($auth) {
-    header('Location: ' . $auth->getLogoutUrl());
+    // Make POST request to logout endpoint
+    $ch = curl_init($auth->getLogoutUrl());
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_COOKIE => 'bennernet_session=' . ($_COOKIE['bennernet_session'] ?? ''),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+
+    // Clear local cookie
+    setcookie('bennernet_session', '', time() - 3600, '/', '.bennernet.com', true, true);
+
+    // Redirect to login
+    header('Location: /login');
     exit;
 });
 
