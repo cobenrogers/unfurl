@@ -76,9 +76,9 @@ $router = new Router();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $publicPaths = ['/login', '/pending-approval', '/health', '/api/health'];
 
-// Allow unauthenticated access to RSS feeds, API endpoints, and static assets
+// Allow unauthenticated access to RSS feed, API endpoints, and static assets
 $isPublicEndpoint = in_array($currentPath, $publicPaths)
-    || str_starts_with($currentPath, '/feed')
+    || $currentPath === '/feed'
     || str_starts_with($currentPath, '/api/')
     || str_starts_with($currentPath, '/assets/');
 
