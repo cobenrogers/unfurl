@@ -81,6 +81,7 @@ $config = [
     ],
 
     'processing' => [
+        'processor' => env('ARTICLE_PROCESSOR', 'node'), // 'node' (default) or 'php'
         'timeout' => (int)env('PROCESSING_TIMEOUT', 30),
         'max_retries' => (int)env('PROCESSING_MAX_RETRIES', 3),
         'retry_delay' => (int)env('PROCESSING_RETRY_DELAY', 60),

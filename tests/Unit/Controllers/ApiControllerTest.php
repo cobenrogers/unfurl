@@ -11,6 +11,7 @@ use Unfurl\Repositories\ApiKeyRepository;
 use Unfurl\Repositories\FeedRepository;
 use Unfurl\Repositories\ArticleRepository;
 use Unfurl\Services\UnfurlService;
+use Unfurl\Services\GoogleNews\UrlDecoder;
 use Unfurl\Services\ArticleExtractor;
 use Unfurl\Services\ProcessingQueue;
 use Unfurl\Exceptions\SecurityException;
@@ -34,6 +35,7 @@ class ApiControllerTest extends TestCase
     private FeedRepository $feedRepo;
     private ArticleRepository $articleRepo;
     private UnfurlService $unfurlService;
+    private UrlDecoder $urlDecoder;
     private ArticleExtractor $extractor;
     private ProcessingQueue $queue;
     private Logger $logger;
@@ -57,6 +59,7 @@ class ApiControllerTest extends TestCase
         $this->feedRepo = $this->createMock(FeedRepository::class);
         $this->articleRepo = $this->createMock(ArticleRepository::class);
         $this->unfurlService = $this->createMock(UnfurlService::class);
+        $this->urlDecoder = $this->createMock(UrlDecoder::class);
         $this->extractor = $this->createMock(ArticleExtractor::class);
         $this->queue = $this->createMock(ProcessingQueue::class);
         $this->logger = $this->createMock(Logger::class);
@@ -66,9 +69,11 @@ class ApiControllerTest extends TestCase
             $this->feedRepo,
             $this->articleRepo,
             $this->unfurlService,
+            $this->urlDecoder,
             $this->extractor,
             $this->queue,
-            $this->logger
+            $this->logger,
+            'php'
         );
     }
 

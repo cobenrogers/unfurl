@@ -26,6 +26,7 @@ use Unfurl\Security\OutputEscaper;
 use Unfurl\Security\UrlValidator;
 use Unfurl\Services\UnfurlService;
 use Unfurl\Services\ArticleExtractor;
+use Unfurl\Services\GoogleNews\UrlDecoder;
 
 // Load configuration
 $config = require __DIR__ . '/../config.php';
@@ -63,6 +64,8 @@ $csrf = new CsrfToken();
 $validator = new InputValidator();
 $escaper = new OutputEscaper();
 $unfurlService = new UnfurlService($logger, null, false); // Non-headless to avoid bot detection
+$urlValidator = new UrlValidator();
+$urlDecoder = new UrlDecoder($urlValidator);
 $extractor = new ArticleExtractor();
 
 // Initialize router
@@ -614,7 +617,7 @@ $router->post('/api/feeds/fetch', function () use ($feedRepo, $articleRepo, $csr
 });
 
 // API Routes - Process single article
-$router->post('/api/articles/{id}/process', function ($id) use ($articleRepo, $unfurlService, $logger) {
+$router->post('/api/articles/{id}/process', function ($id) use ($articleRepo, $unfurlService, $urlDecoder, $extractor, $logger, $config) {
     set_time_limit(30);
     ob_start();
     header('Content-Type: application/json');
@@ -626,25 +629,110 @@ $router->post('/api/articles/{id}/process', function ($id) use ($articleRepo, $u
             throw new \Exception('Article not found');
         }
 
-        // Process with Playwright
-        $result = $unfurlService->processArticle((int)$id, $article['google_news_url']);
+        $processor = $config['processing']['processor'] ?? 'php';
 
-        if ($result['status'] === 'success' && !empty($result['finalUrl'])) {
-            // Update article with results
-            try {
+        if ($processor === 'node') {
+            // Process with Node.js/Playwright
+            $result = $unfurlService->processArticle((int)$id, $article['google_news_url']);
+
+            if ($result['status'] === 'success' && !empty($result['finalUrl'])) {
+                // Update article with results
+                try {
+                    $articleRepo->update((int)$id, [
+                        'final_url' => $result['finalUrl'],
+                        'status' => 'success',
+                        'page_title' => $result['pageTitle'] ?? null,
+                        'og_title' => $result['ogTitle'] ?? null,
+                        'og_description' => $result['ogDescription'] ?? null,
+                        'og_image' => $result['ogImage'] ?? null,
+                        'og_url' => $result['ogUrl'] ?? null,
+                        'og_site_name' => $result['ogSiteName'] ?? null,
+                        'twitter_image' => $result['twitterImage'] ?? null,
+                        'author' => $result['author'] ?? null,
+                        'article_content' => $result['articleContent'] ?? null,
+                        'word_count' => $result['wordCount'] ?? null,
+                        'processed_at' => date('Y-m-d H:i:s'),
+                    ]);
+
+                    ob_clean();
+                    echo json_encode([
+                        'success' => true,
+                        'article_id' => (int)$id,
+                        'final_url' => $result['finalUrl']
+                    ]);
+                } catch (\PDOException $e) {
+                    // Handle duplicate final_url gracefully
+                    if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                        ob_clean();
+                        echo json_encode([
+                            'success' => true,
+                            'article_id' => (int)$id,
+                            'duplicate' => true,
+                            'final_url' => $result['finalUrl']
+                        ]);
+                    } else {
+                        throw $e;
+                    }
+                }
+            } else {
+                // Mark as failed
                 $articleRepo->update((int)$id, [
-                    'final_url' => $result['finalUrl'],
+                    'status' => 'failed',
+                    'error_message' => $result['error'] ?? 'Unknown error',
+                ]);
+
+                ob_clean();
+                echo json_encode([
+                    'success' => false,
+                    'article_id' => (int)$id,
+                    'error' => $result['error'] ?? 'Processing failed'
+                ]);
+            }
+        } else {
+            // Process with PHP (UrlDecoder + ArticleExtractor)
+            try {
+                // Decode Google News URL
+                $finalUrl = $urlDecoder->decode($article['google_news_url']);
+
+                // Fetch article HTML
+                $ch = curl_init($finalUrl);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Unfurl/1.0)',
+                    CURLOPT_SSL_VERIFYPEER => true,
+                    CURLOPT_SSL_VERIFYHOST => 2,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_MAXREDIRS => 5,
+                    CURLOPT_ENCODING => '',
+                ]);
+                $html = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($html === false || $httpCode >= 400) {
+                    throw new \Exception('Failed to fetch article HTML (HTTP ' . $httpCode . ')');
+                }
+
+                // Extract metadata
+                $metadata = $extractor->extract($html, $finalUrl);
+
+                // Update article with results
+                $articleRepo->update((int)$id, [
+                    'final_url' => $finalUrl,
                     'status' => 'success',
-                    'page_title' => $result['pageTitle'] ?? null,
-                    'og_title' => $result['ogTitle'] ?? null,
-                    'og_description' => $result['ogDescription'] ?? null,
-                    'og_image' => $result['ogImage'] ?? null,
-                    'og_url' => $result['ogUrl'] ?? null,
-                    'og_site_name' => $result['ogSiteName'] ?? null,
-                    'twitter_image' => $result['twitterImage'] ?? null,
-                    'author' => $result['author'] ?? null,
-                    'article_content' => $result['articleContent'] ?? null,
-                    'word_count' => $result['wordCount'] ?? null,
+                    'page_title' => $metadata['page_title'] ?? null,
+                    'og_title' => $metadata['og_title'] ?? null,
+                    'og_description' => $metadata['og_description'] ?? null,
+                    'og_image' => $metadata['og_image'] ?? null,
+                    'og_url' => $metadata['og_url'] ?? null,
+                    'og_site_name' => $metadata['og_site_name'] ?? null,
+                    'twitter_image' => $metadata['twitter_image'] ?? null,
+                    'twitter_card' => $metadata['twitter_card'] ?? null,
+                    'author' => $metadata['author'] ?? null,
+                    'article_content' => $metadata['article_content'] ?? null,
+                    'word_count' => $metadata['word_count'] ?? null,
+                    'categories' => !empty($metadata['categories']) ? json_encode($metadata['categories']) : null,
                     'processed_at' => date('Y-m-d H:i:s'),
                 ]);
 
@@ -652,7 +740,7 @@ $router->post('/api/articles/{id}/process', function ($id) use ($articleRepo, $u
                 echo json_encode([
                     'success' => true,
                     'article_id' => (int)$id,
-                    'final_url' => $result['finalUrl']
+                    'final_url' => $finalUrl
                 ]);
             } catch (\PDOException $e) {
                 // Handle duplicate final_url gracefully
@@ -662,25 +750,25 @@ $router->post('/api/articles/{id}/process', function ($id) use ($articleRepo, $u
                         'success' => true,
                         'article_id' => (int)$id,
                         'duplicate' => true,
-                        'final_url' => $result['finalUrl']
+                        'final_url' => $finalUrl ?? null
                     ]);
                 } else {
                     throw $e;
                 }
-            }
-        } else {
-            // Mark as failed
-            $articleRepo->update((int)$id, [
-                'status' => 'failed',
-                'error_message' => $result['error'] ?? 'Unknown error',
-            ]);
+            } catch (\Exception $e) {
+                // Mark as failed
+                $articleRepo->update((int)$id, [
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
 
-            ob_clean();
-            echo json_encode([
-                'success' => false,
-                'article_id' => (int)$id,
-                'error' => $result['error'] ?? 'Processing failed'
-            ]);
+                ob_clean();
+                echo json_encode([
+                    'success' => false,
+                    'article_id' => (int)$id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
     } catch (\Exception $e) {
         ob_clean();
@@ -794,6 +882,153 @@ $router->get('/api/feed', function () use ($apiKeyRepo, $articleRepo, $escaper, 
         echo '<?xml version="1.0" encoding="UTF-8"?><error>' . $escaper->html($e->getMessage()) . '</error>';
         exit;
     }
+});
+
+// Production Sync Import API (receive articles from local)
+$router->post('/api/sync/import', function () use ($apiKeyRepo, $articleRepo, $feedRepo, $logger) {
+    header('Content-Type: application/json');
+
+    try {
+        // Validate API key
+        $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
+
+        if (empty($apiKey)) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Missing X-API-Key header']);
+            exit;
+        }
+
+        $apiKeyData = $apiKeyRepo->findByKeyValue($apiKey);
+
+        if ($apiKeyData === null || !$apiKeyData['enabled']) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Invalid or disabled API key']);
+            exit;
+        }
+
+        // Update last used timestamp
+        $apiKeyRepo->updateLastUsedAt($apiKeyData['id']);
+
+        // Get request body
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+
+        if (!$data || !isset($data['articles']) || !is_array($data['articles'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request body']);
+            exit;
+        }
+
+        $articles = $data['articles'];
+        $stats = [
+            'imported' => 0,
+            'skipped' => 0,
+            'errors' => [],
+        ];
+
+        // Import each article
+        foreach ($articles as $article) {
+            try {
+                // Check if feed exists, if not skip (production may not have all feeds)
+                $feed = $feedRepo->findById($article['feed_id']);
+                if (!$feed) {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                // Insert or update article
+                // Use INSERT ... ON DUPLICATE KEY UPDATE for upsert behavior
+                $sql = "INSERT INTO articles (
+                    feed_id, topic, google_news_url, rss_title, pub_date,
+                    rss_description, rss_source, final_url, status,
+                    page_title, og_title, og_description, og_image, og_url,
+                    og_site_name, twitter_image, twitter_card, author,
+                    article_content, word_count, categories, error_message,
+                    retry_count, processed_at, created_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ) ON DUPLICATE KEY UPDATE
+                    status = VALUES(status),
+                    page_title = VALUES(page_title),
+                    og_title = VALUES(og_title),
+                    og_description = VALUES(og_description),
+                    og_image = VALUES(og_image),
+                    og_url = VALUES(og_url),
+                    og_site_name = VALUES(og_site_name),
+                    twitter_image = VALUES(twitter_image),
+                    twitter_card = VALUES(twitter_card),
+                    author = VALUES(author),
+                    article_content = VALUES(article_content),
+                    word_count = VALUES(word_count),
+                    categories = VALUES(categories),
+                    processed_at = VALUES(processed_at),
+                    updated_at = CURRENT_TIMESTAMP";
+
+                $stmt = $articleRepo->db->prepare($sql);
+                $stmt->execute([
+                    $article['feed_id'],
+                    $article['topic'],
+                    $article['google_news_url'],
+                    $article['rss_title'],
+                    $article['pub_date'],
+                    $article['rss_description'],
+                    $article['rss_source'],
+                    $article['final_url'],
+                    $article['status'],
+                    $article['page_title'],
+                    $article['og_title'],
+                    $article['og_description'],
+                    $article['og_image'],
+                    $article['og_url'],
+                    $article['og_site_name'],
+                    $article['twitter_image'],
+                    $article['twitter_card'],
+                    $article['author'],
+                    $article['article_content'],
+                    $article['word_count'],
+                    $article['categories'],
+                    $article['error_message'],
+                    $article['retry_count'],
+                    $article['processed_at'],
+                    $article['created_at'],
+                ]);
+
+                $stats['imported']++;
+
+            } catch (\Exception $e) {
+                $stats['errors'][] = $e->getMessage();
+                $logger->error('Article import failed', [
+                    'category' => 'sync-import',
+                    'article_id' => $article['id'] ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $logger->info('Sync import completed', [
+            'category' => 'sync-import',
+            'api_key_id' => $apiKeyData['id'],
+            'stats' => $stats,
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'imported' => $stats['imported'],
+            'skipped' => $stats['skipped'],
+            'errors' => $stats['errors'],
+        ]);
+
+    } catch (\Exception $e) {
+        $logger->error('Sync import error', [
+            'category' => 'sync-import',
+            'error' => $e->getMessage(),
+        ]);
+
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Internal server error']);
+    }
+
+    exit;
 });
 
 // RSS Feed endpoint (unauthenticated - for local/dev use)

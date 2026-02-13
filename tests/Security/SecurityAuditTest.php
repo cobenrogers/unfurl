@@ -7,6 +7,7 @@ namespace Tests\Security;
 use PHPUnit\Framework\TestCase;
 use Unfurl\Core\Database;
 use Unfurl\Core\Logger;
+use Unfurl\Core\TimezoneHelper;
 use Unfurl\Controllers\FeedController;
 use Unfurl\Controllers\ArticleController;
 use Unfurl\Controllers\SettingsController;
@@ -90,7 +91,7 @@ class SecurityAuditTest extends TestCase
         $this->urlValidator = new UrlValidator();
 
         // Initialize controllers for testing
-        $queue = new ProcessingQueue($this->articleRepo, $this->logger);
+        $queue = new ProcessingQueue($this->articleRepo, $this->logger, $timezone);
 
         $this->feedController = new FeedController(
             $this->feedRepo,
@@ -116,6 +117,7 @@ class SecurityAuditTest extends TestCase
         );
 
         // ApiController setup with proper dependencies
+        $unfurlService = $this->createMock(\Unfurl\Services\UnfurlService::class);
         $urlDecoder = new UrlDecoder($this->urlValidator, []);
         $extractor = new ArticleExtractor();
 
@@ -123,10 +125,12 @@ class SecurityAuditTest extends TestCase
             $this->apiKeyRepo,
             $this->feedRepo,
             $this->articleRepo,
+            $unfurlService,
             $urlDecoder,
             $extractor,
             $queue,
-            $this->logger
+            $this->logger,
+            'php'
         );
 
         // Create database schema

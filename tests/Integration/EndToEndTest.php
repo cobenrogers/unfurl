@@ -437,9 +437,11 @@ class EndToEndTest extends TestCase
             $this->feedRepo,
             $this->articleRepo,
             $this->createMock(\Unfurl\Services\UnfurlService::class),
+            $this->createMock(UrlDecoder::class),
             $this->createMock(ArticleExtractor::class),
             $this->queue,
-            $this->logger
+            $this->logger,
+            'php'
         );
 
         ob_start();
@@ -504,8 +506,9 @@ class EndToEndTest extends TestCase
             'enabled' => 1,
         ]);
 
-        // Mock unfurl service and extractor
+        // Mock unfurl service, url decoder, and extractor
         $unfurlService = $this->createMock(\Unfurl\Services\UnfurlService::class);
+        $urlDecoder = $this->createMock(UrlDecoder::class);
         $extractor = $this->createMock(ArticleExtractor::class);
 
         $apiController = new ApiController(
@@ -513,9 +516,11 @@ class EndToEndTest extends TestCase
             $this->feedRepo,
             $this->articleRepo,
             $unfurlService,
+            $urlDecoder,
             $extractor,
             $this->queue,
-            $this->logger
+            $this->logger,
+            'php'
         );
 
         // Simulate rate limit exceeded by making 60 requests

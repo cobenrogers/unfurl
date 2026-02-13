@@ -11,6 +11,7 @@ use Unfurl\Repositories\FeedRepository;
 use Unfurl\Repositories\ArticleRepository;
 use Unfurl\Services\UnfurlService;
 use Unfurl\Services\ArticleExtractor;
+use Unfurl\Services\GoogleNews\UrlDecoder;
 use Unfurl\Services\ProcessingQueue;
 use Unfurl\Exceptions\SecurityException;
 use SimpleXMLElement;
@@ -50,26 +51,32 @@ class ApiController
     private FeedRepository $feedRepo;
     private ArticleRepository $articleRepo;
     private UnfurlService $unfurlService;
+    private UrlDecoder $urlDecoder;
     private ArticleExtractor $extractor;
     private ProcessingQueue $queue;
     private Logger $logger;
+    private string $processor;
 
     public function __construct(
         ApiKeyRepository $apiKeyRepo,
         FeedRepository $feedRepo,
         ArticleRepository $articleRepo,
         UnfurlService $unfurlService,
+        UrlDecoder $urlDecoder,
         ArticleExtractor $extractor,
         ProcessingQueue $queue,
-        Logger $logger
+        Logger $logger,
+        string $processor = 'node'
     ) {
         $this->apiKeyRepo = $apiKeyRepo;
         $this->feedRepo = $feedRepo;
         $this->articleRepo = $articleRepo;
         $this->unfurlService = $unfurlService;
+        $this->urlDecoder = $urlDecoder;
         $this->extractor = $extractor;
         $this->queue = $queue;
         $this->logger = $logger;
+        $this->processor = $processor;
     }
 
     /**
@@ -409,78 +416,11 @@ class ApiController
     private function processArticle(array $feed, array $item, array &$stats): void
     {
         try {
-            // Create a temporary article ID for Playwright processing
-            // We'll use a temporary negative ID, then replace with real ID after saving
-            $tempId = -1;
-
-            // Use Playwright browser automation to follow Google News URL
-            $result = $this->unfurlService->processArticle($tempId, $item['link']);
-
-            // Check if Playwright processing was successful
-            if ($result['status'] !== 'success') {
-                throw new \Exception($result['error'] ?? 'Unfurl processing failed');
-            }
-
-            // Ensure we got a final URL
-            if (empty($result['finalUrl'])) {
-                throw new \Exception('No final URL returned from unfurl service');
-            }
-
-            $finalUrl = $result['finalUrl'];
-
-            // Parse pubDate
-            $pubDate = null;
-            if (!empty($item['pubDate'])) {
-                $timestamp = strtotime($item['pubDate']);
-                if ($timestamp !== false) {
-                    $pubDate = date('Y-m-d H:i:s', $timestamp);
-                }
-            }
-
-            // Save article to database with Playwright metadata
-            $articleData = [
-                'feed_id' => $feed['id'],
-                'topic' => $feed['topic'],
-                'google_news_url' => $item['link'],
-                'rss_title' => $item['title'],
-                'pub_date' => $pubDate,
-                'rss_description' => $item['description'],
-                'rss_source' => $item['source'],
-                'final_url' => $finalUrl,
-                'status' => 'success',
-                'page_title' => $result['pageTitle'] ?? null,
-                'og_title' => $result['ogTitle'] ?? null,
-                'og_description' => $result['ogDescription'] ?? null,
-                'og_image' => $result['ogImage'] ?? null,
-                'og_url' => $result['ogUrl'] ?? null,
-                'og_site_name' => $result['ogSiteName'] ?? null,
-                'twitter_image' => $result['twitterImage'] ?? null,
-                'author' => $result['author'] ?? null,
-                'article_content' => $result['articleContent'] ?? null,
-                'word_count' => $result['wordCount'] ?? null,
-                'processed_at' => date('Y-m-d H:i:s'),
-            ];
-
-            try {
-                $this->articleRepo->create($articleData);
-                $stats['articles_created']++;
-
-                $this->logger->info('Article processed successfully', [
-                    'category' => 'api',
-                    'feed_id' => $feed['id'],
-                    'final_url' => $finalUrl,
-                ]);
-            } catch (\PDOException $e) {
-                // Handle duplicate final_url gracefully (unique constraint)
-                if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                    $this->logger->debug('Duplicate article skipped', [
-                        'category' => 'api',
-                        'feed_id' => $feed['id'],
-                        'final_url' => $finalUrl,
-                    ]);
-                } else {
-                    throw $e;
-                }
+            // Choose processing method based on configuration
+            if ($this->processor === 'node') {
+                $this->processArticleWithNode($feed, $item, $stats);
+            } else {
+                $this->processArticleWithPhp($feed, $item, $stats);
             }
         } catch (SecurityException $e) {
             // SSRF or security violation - permanent failure
@@ -495,6 +435,170 @@ class ApiController
         } catch (\Exception $e) {
             // Generic error - may be retryable
             $this->handleArticleError($feed, $item, $e, $stats);
+        }
+    }
+
+    /**
+     * Process article using PHP-only approach (UrlDecoder + ArticleExtractor)
+     *
+     * @param array $feed Feed data
+     * @param array $item RSS item data
+     * @param array &$stats Statistics array (passed by reference)
+     * @return void
+     */
+    private function processArticleWithPhp(array $feed, array $item, array &$stats): void
+    {
+        // Decode Google News URL to get final URL
+        $finalUrl = $this->urlDecoder->decode($item['link']);
+
+        // Fetch article HTML
+        $html = $this->fetchArticleHtml($finalUrl);
+
+        // Extract metadata from HTML
+        $metadata = $this->extractor->extract($html, $finalUrl);
+
+        // Parse pubDate
+        $pubDate = null;
+        if (!empty($item['pubDate'])) {
+            $timestamp = strtotime($item['pubDate']);
+            if ($timestamp !== false) {
+                $pubDate = date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        // Save article to database with PHP-extracted metadata
+        $articleData = [
+            'feed_id' => $feed['id'],
+            'topic' => $feed['topic'],
+            'google_news_url' => $item['link'],
+            'rss_title' => $item['title'],
+            'pub_date' => $pubDate,
+            'rss_description' => $item['description'],
+            'rss_source' => $item['source'],
+            'final_url' => $finalUrl,
+            'status' => 'success',
+            'page_title' => $metadata['page_title'] ?? null,
+            'og_title' => $metadata['og_title'] ?? null,
+            'og_description' => $metadata['og_description'] ?? null,
+            'og_image' => $metadata['og_image'] ?? null,
+            'og_url' => $metadata['og_url'] ?? null,
+            'og_site_name' => $metadata['og_site_name'] ?? null,
+            'twitter_image' => $metadata['twitter_image'] ?? null,
+            'twitter_card' => $metadata['twitter_card'] ?? null,
+            'author' => $metadata['author'] ?? null,
+            'article_content' => $metadata['article_content'] ?? null,
+            'word_count' => $metadata['word_count'] ?? null,
+            'categories' => !empty($metadata['categories']) ? json_encode($metadata['categories']) : null,
+            'processed_at' => date('Y-m-d H:i:s'),
+        ];
+
+        try {
+            $this->articleRepo->create($articleData);
+            $stats['articles_created']++;
+
+            $this->logger->info('Article processed successfully (PHP)', [
+                'category' => 'api',
+                'feed_id' => $feed['id'],
+                'final_url' => $finalUrl,
+                'processor' => 'php',
+            ]);
+        } catch (\PDOException $e) {
+            // Handle duplicate final_url gracefully (unique constraint)
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $this->logger->debug('Duplicate article skipped', [
+                    'category' => 'api',
+                    'feed_id' => $feed['id'],
+                    'final_url' => $finalUrl,
+                ]);
+            } else {
+                throw $e;
+            }
+        }
+    }
+
+    /**
+     * Process article using Node.js/Playwright approach
+     *
+     * @param array $feed Feed data
+     * @param array $item RSS item data
+     * @param array &$stats Statistics array (passed by reference)
+     * @return void
+     */
+    private function processArticleWithNode(array $feed, array $item, array &$stats): void
+    {
+        // Create a temporary article ID for Playwright processing
+        // We'll use a temporary negative ID, then replace with real ID after saving
+        $tempId = -1;
+
+        // Use Playwright browser automation to follow Google News URL
+        $result = $this->unfurlService->processArticle($tempId, $item['link']);
+
+        // Check if Playwright processing was successful
+        if ($result['status'] !== 'success') {
+            throw new \Exception($result['error'] ?? 'Unfurl processing failed');
+        }
+
+        // Ensure we got a final URL
+        if (empty($result['finalUrl'])) {
+            throw new \Exception('No final URL returned from unfurl service');
+        }
+
+        $finalUrl = $result['finalUrl'];
+
+        // Parse pubDate
+        $pubDate = null;
+        if (!empty($item['pubDate'])) {
+            $timestamp = strtotime($item['pubDate']);
+            if ($timestamp !== false) {
+                $pubDate = date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        // Save article to database with Playwright metadata
+        $articleData = [
+            'feed_id' => $feed['id'],
+            'topic' => $feed['topic'],
+            'google_news_url' => $item['link'],
+            'rss_title' => $item['title'],
+            'pub_date' => $pubDate,
+            'rss_description' => $item['description'],
+            'rss_source' => $item['source'],
+            'final_url' => $finalUrl,
+            'status' => 'success',
+            'page_title' => $result['pageTitle'] ?? null,
+            'og_title' => $result['ogTitle'] ?? null,
+            'og_description' => $result['ogDescription'] ?? null,
+            'og_image' => $result['ogImage'] ?? null,
+            'og_url' => $result['ogUrl'] ?? null,
+            'og_site_name' => $result['ogSiteName'] ?? null,
+            'twitter_image' => $result['twitterImage'] ?? null,
+            'author' => $result['author'] ?? null,
+            'article_content' => $result['articleContent'] ?? null,
+            'word_count' => $result['wordCount'] ?? null,
+            'processed_at' => date('Y-m-d H:i:s'),
+        ];
+
+        try {
+            $this->articleRepo->create($articleData);
+            $stats['articles_created']++;
+
+            $this->logger->info('Article processed successfully (Node)', [
+                'category' => 'api',
+                'feed_id' => $feed['id'],
+                'final_url' => $finalUrl,
+                'processor' => 'node',
+            ]);
+        } catch (\PDOException $e) {
+            // Handle duplicate final_url gracefully (unique constraint)
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $this->logger->debug('Duplicate article skipped', [
+                    'category' => 'api',
+                    'feed_id' => $feed['id'],
+                    'final_url' => $finalUrl,
+                ]);
+            } else {
+                throw $e;
+            }
         }
     }
 

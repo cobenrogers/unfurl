@@ -111,16 +111,39 @@ class UrlDecoder
     /**
      * Check if URL is old-style format (base64 encoded in path)
      *
+     * Old-style URLs have short article IDs (< 100 chars) that can be base64 decoded
+     * New-style URLs have long article IDs (> 100 chars) that require redirect following
+     *
      * @param string $url URL to check
      * @return bool True if old-style format
      */
     public function isOldStyleUrl(string $url): bool
     {
+        // Extract article ID from URL
+        $parsed = parse_url($url);
+        $path = $parsed['path'] ?? '';
+
+        if (!preg_match('/\/articles\/(.+)/', $path, $matches)) {
+            return false;
+        }
+
+        $articleId = $matches[1];
+
+        // Remove query parameters
+        $questionPos = strpos($articleId, '?');
+        if ($questionPos !== false) {
+            $articleId = substr($articleId, 0, $questionPos);
+        }
+
+        // Old-style URLs have shorter article IDs (typically 20-140 chars)
+        // New-style URLs have very long article IDs (150+ chars)
+        // Check for CBM/CWM prefix AND reasonable length
         foreach (self::OLD_STYLE_PATTERNS as $pattern) {
-            if (preg_match($pattern, $url)) {
+            if (preg_match($pattern, $url) && strlen($articleId) < 150) {
                 return true;
             }
         }
+
         return false;
     }
 
