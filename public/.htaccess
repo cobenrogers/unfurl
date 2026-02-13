@@ -8,7 +8,7 @@
 <IfModule mod_headers.c>
     # Content Security Policy (CSP)
     # Restricts where resources can be loaded from to prevent XSS attacks
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
 
     # X-Frame-Options
     # Prevents clickjacking by disallowing the site to be embedded in frames
