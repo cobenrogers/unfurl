@@ -331,11 +331,30 @@ class ArticleRepository
         // Build WHERE clause
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
+        // Build ORDER BY clause
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'DESC';
+
+        // Validate sort parameters
+        $allowedSortFields = ['created_at', 'pub_date', 'title', 'status', 'word_count', 'rss_title'];
+        $allowedSortOrders = ['ASC', 'DESC'];
+
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'created_at';
+        }
+
+        if (!in_array(strtoupper($sortOrder), $allowedSortOrders)) {
+            $sortOrder = 'DESC';
+        }
+
+        // Use rss_title for 'title' sort
+        $sortField = $sortBy === 'title' ? 'rss_title' : $sortBy;
+
         // Build query with pagination
         $sql = "
             SELECT * FROM articles
             {$whereClause}
-            ORDER BY pub_date DESC, created_at DESC
+            ORDER BY {$sortField} {$sortOrder}, created_at DESC
             LIMIT ? OFFSET ?
         ";
 

@@ -231,7 +231,7 @@ $total_items = (int)($total_count ?? 0);
                         <th class="p-4 text-left font-semibold text-sm">Title</th>
                         <th class="p-4 text-left font-semibold text-sm" style="width: 120px;">Topic</th>
                         <th class="p-4 text-left font-semibold text-sm">Status</th>
-                        <th class="p-4 text-left font-semibold text-sm" style="width: 160px;">Date</th>
+                        <th class="p-4 text-left font-semibold text-sm" style="width: 160px;">Created</th>
                         <th class="p-4 text-left font-semibold text-sm">Words</th>
                         <th class="p-4 text-center font-semibold text-sm">Actions</th>
                     </tr>

@@ -104,12 +104,12 @@ class ArticleControllerTest extends TestCase
 
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with([], 20, 0)
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'], 20, 0)
             ->willReturn($articles);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
-            ->with([])
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'])
             ->willReturn(2);
 
         $this->csrf->expects($this->once())
@@ -132,11 +132,12 @@ class ArticleControllerTest extends TestCase
 
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with([], 10, 5)
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'], 10, 5)
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'])
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -155,11 +156,12 @@ class ArticleControllerTest extends TestCase
 
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with([], 100, 0) // Should be capped at 100
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'], 100, 0) // Should be capped at 100
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'])
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -177,11 +179,12 @@ class ArticleControllerTest extends TestCase
 
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with([], 20, 0) // Should be 0
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'], 20, 0) // Should be 0
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
+            ->with(['sort_by' => 'created_at', 'sort_order' => 'DESC'])
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -197,14 +200,20 @@ class ArticleControllerTest extends TestCase
     {
         $_GET['topic'] = 'AI';
 
+        $expectedFilters = [
+            'topic' => 'AI',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
+        ];
+
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with(['topic' => 'AI'], 20, 0)
+            ->with($expectedFilters, 20, 0)
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
-            ->with(['topic' => 'AI'])
+            ->with($expectedFilters)
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -213,21 +222,27 @@ class ArticleControllerTest extends TestCase
 
         $result = $this->controller->index();
 
-        $this->assertEquals(['topic' => 'AI'], $result['filters']);
+        $this->assertEquals($expectedFilters, $result['filters']);
     }
 
     public function test_index_filters_by_status(): void
     {
         $_GET['status'] = 'failed';
 
+        $expectedFilters = [
+            'status' => 'failed',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
+        ];
+
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with(['status' => 'failed'], 20, 0)
+            ->with($expectedFilters, 20, 0)
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
-            ->with(['status' => 'failed'])
+            ->with($expectedFilters)
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -236,7 +251,7 @@ class ArticleControllerTest extends TestCase
 
         $result = $this->controller->index();
 
-        $this->assertEquals(['status' => 'failed'], $result['filters']);
+        $this->assertEquals($expectedFilters, $result['filters']);
     }
 
     public function test_index_filters_by_date_range(): void
@@ -247,6 +262,8 @@ class ArticleControllerTest extends TestCase
         $expectedFilters = [
             'date_from' => '2026-01-01',
             'date_to' => '2026-01-31',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
         ];
 
         $this->articleRepo->expects($this->once())
@@ -272,14 +289,20 @@ class ArticleControllerTest extends TestCase
     {
         $_GET['search'] = 'artificial intelligence';
 
+        $expectedFilters = [
+            'search' => 'artificial intelligence',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
+        ];
+
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')
-            ->with(['search' => 'artificial intelligence'], 20, 0)
+            ->with($expectedFilters, 20, 0)
             ->willReturn([]);
 
         $this->articleRepo->expects($this->once())
             ->method('countWithFilters')
-            ->with(['search' => 'artificial intelligence'])
+            ->with($expectedFilters)
             ->willReturn(0);
 
         $this->csrf->expects($this->once())
@@ -288,7 +311,7 @@ class ArticleControllerTest extends TestCase
 
         $result = $this->controller->index();
 
-        $this->assertEquals(['search' => 'artificial intelligence'], $result['filters']);
+        $this->assertEquals($expectedFilters, $result['filters']);
     }
 
     public function test_index_combines_multiple_filters(): void
@@ -301,6 +324,8 @@ class ArticleControllerTest extends TestCase
             'topic' => 'AI',
             'status' => 'success',
             'search' => 'machine learning',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
         ];
 
         $this->articleRepo->expects($this->once())
@@ -328,7 +353,11 @@ class ArticleControllerTest extends TestCase
         $_GET['status'] = '  ';
         $_GET['search'] = 'test';
 
-        $expectedFilters = ['search' => 'test'];
+        $expectedFilters = [
+            'search' => 'test',
+            'sort_by' => 'created_at',
+            'sort_order' => 'DESC',
+        ];
 
         $this->articleRepo->expects($this->once())
             ->method('findWithFilters')

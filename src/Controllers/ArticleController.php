@@ -84,10 +84,32 @@ class ArticleController
             'date_from' => $_GET['date_from'] ?? null,
             'date_to' => $_GET['date_to'] ?? null,
             'search' => $_GET['search'] ?? null,
+            'sort_by' => $_GET['sort_by'] ?? 'created_at',
+            'sort_order' => $_GET['sort_order'] ?? 'DESC',
         ];
 
+        // Validate sort parameters
+        $allowedSortFields = ['created_at', 'pub_date', 'title', 'status', 'word_count'];
+        $allowedSortOrders = ['ASC', 'DESC'];
+
+        if (!in_array($filters['sort_by'], $allowedSortFields)) {
+            $filters['sort_by'] = 'created_at';
+        }
+
+        if (!in_array(strtoupper($filters['sort_order']), $allowedSortOrders)) {
+            $filters['sort_order'] = 'DESC';
+        } else {
+            $filters['sort_order'] = strtoupper($filters['sort_order']);
+        }
+
         // Remove null/empty filters (trim whitespace before checking)
-        $filters = array_filter($filters, fn($v) => $v !== null && trim((string)$v) !== '');
+        // Keep sort_by and sort_order even if they're defaults
+        $filters = array_filter($filters, function($v, $k) {
+            if (in_array($k, ['sort_by', 'sort_order'])) {
+                return true; // Always keep sort parameters
+            }
+            return $v !== null && trim((string)$v) !== '';
+        }, ARRAY_FILTER_USE_BOTH);
 
         // Get articles with filters
         $articles = $this->articleRepo->findWithFilters($filters, $limit, $offset);
